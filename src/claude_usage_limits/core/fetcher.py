@@ -1,15 +1,24 @@
 """Run `claude -p "/usage"` and return its text."""
 
 import json
+import shutil
 import subprocess
 
 
 def fetch_usage_text():
+    # Resolve the full path first: an npm install on Windows is `claude.cmd`,
+    # which subprocess cannot find from the bare name.
+    exe = shutil.which("claude")
+    if exe is None:
+        return None, "`claude` CLI not found on PATH."
+
     try:
         proc = subprocess.run(
-            ["claude", "-p", "/usage", "--output-format", "json"],
+            [exe, "-p", "/usage", "--output-format", "json"],
             capture_output=True,
-            text=True,
+            # claude prints UTF-8 whatever the locale is (cp1252 on Windows would garble the "·").
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
         )
     except FileNotFoundError:
