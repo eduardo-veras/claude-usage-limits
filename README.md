@@ -26,7 +26,7 @@ cookie or API key, and makes no network requests of its own.
 
 - Python 3.9+
 - [Claude Code](https://claude.com/claude-code) installed and logged in (`claude` on your `PATH`)
-- macOS or Linux (the live loop uses POSIX terminal APIs; `--once` and `--json` work anywhere)
+- macOS or Linux for the live dashboard. On Windows only `--once` and `--json` work for now (the live loop uses POSIX terminal APIs); inside WSL everything works
 
 ## Install
 
@@ -121,7 +121,7 @@ only does "how close am I to my account limits, and why?".
 | Refresh cost | Spawns one `claude` process per refresh (default every 60s) | Reads local files, refreshes every few seconds |
 | Robustness | Parses human-readable text, so a wording change in `/usage` can break it | Reads structured JSON |
 | Dependencies | `rich` | `rich`, `numpy`, `pydantic`, `pytz`, `pyyaml`, ... |
-| Platforms | macOS, Linux | macOS, Linux |
+| Platforms | macOS, Linux; Windows with `--once` / `--json` only | macOS, Linux |
 
 Use Claude Monitor if you want token-level analytics and forecasting. Use this
 if you just want the numbers from *Settings > Usage* in a terminal pane with no

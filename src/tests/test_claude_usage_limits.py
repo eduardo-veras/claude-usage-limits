@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from rich.console import Console
 
-from claude_usage_limits.core import parser
+from claude_usage_limits.core import fetcher, parser
 from claude_usage_limits.terminal import themes
 from claude_usage_limits.ui import components, layouts, progress_bars
 from claude_usage_limits.utils import time_utils
@@ -130,3 +130,23 @@ def test_bold_variants_are_actually_styled():
     assert "\x1b[1;36mCLAUDE ACCOUNT USAGE MONITOR" in out  # bold cyan title
     assert "\x1b[1;31m 81%" in out  # bold red percentage
     assert "\x1b[1;7m Last 24h " in out  # bold reverse active tab
+
+
+def test_fetch_resolves_path_and_decodes_utf8(monkeypatch):
+    calls = {}
+
+    def fake_run(cmd, **kwargs):
+        calls.update(cmd=cmd, **kwargs)
+        return type("Proc", (), {"returncode": 0, "stdout": '{"result": "42% used · resets"}', "stderr": ""})()
+
+    monkeypatch.setattr(fetcher.shutil, "which", lambda name: r"C:\npm\claude.cmd")
+    monkeypatch.setattr(fetcher.subprocess, "run", fake_run)
+    assert fetcher.fetch_usage_text() == ("42% used · resets", None)
+    assert calls["cmd"][0] == r"C:\npm\claude.cmd"
+    assert calls["encoding"] == "utf-8"  # never the locale default (cp1252 on Windows)
+
+
+def test_fetch_reports_missing_cli(monkeypatch):
+    monkeypatch.setattr(fetcher.shutil, "which", lambda name: None)
+    text, error = fetcher.fetch_usage_text()
+    assert text is None and "not found" in error

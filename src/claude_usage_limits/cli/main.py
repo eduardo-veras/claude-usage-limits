@@ -57,4 +57,9 @@ def main():
         run_once(args.json, console)
         return
 
+    if sys.platform == "win32":
+        # ponytail: the live loop needs termios/select; add an msvcrt key-polling path to lift this.
+        console.print("[crit.bold]error:[/crit.bold] the live dashboard is not supported on Windows yet; use --once or --json.")
+        sys.exit(2)
+
     run_loop(args.interval, console)
