@@ -26,7 +26,7 @@ cookie or API key, and makes no network requests of its own.
 
 - Python 3.9+
 - [Claude Code](https://claude.com/claude-code) installed and logged in (`claude` on your `PATH`)
-- macOS or Linux for the live dashboard. On Windows only `--once` and `--json` work for now (the live loop uses POSIX terminal APIs); inside WSL everything works
+- macOS, Linux or Windows. On Windows the Tab key is not available (pick the panel's window with `--view` instead); the Windows path is covered by CI but has not been tried on a real machine yet
 
 ## Install
 
@@ -42,11 +42,13 @@ pipx install git+https://github.com/eduardo-veras/claude-usage-limits
 claude-usage-limits                 # live dashboard, refreshes every 60s
 claude-usage-limits --interval 300  # refresh every 5 minutes
 claude-usage-limits --once          # print once and exit
+claude-usage-limits --view 24h      # contributing panel: last 24h instead of the default 7d
 claude-usage-limits --json          # parsed data as JSON, for scripts
 ```
 
-While it is running, **Tab** switches the "What's Contributing" panel between
-the last 24h and the last 7d, and **Ctrl+C** exits.
+The "What's Contributing" panel starts on the last 7d (`--view 24h` for the
+last 24h). While it is running, **Tab** switches between the two on macOS and
+Linux, and **Ctrl+C** exits.
 
 Each refresh is one `claude -p "/usage"` call, so there is little reason to go
 much below the default interval.
@@ -121,7 +123,7 @@ only does "how close am I to my account limits, and why?".
 | Refresh cost | Spawns one `claude` process per refresh (default every 60s) | Reads local files, refreshes every few seconds |
 | Robustness | Parses human-readable text, so a wording change in `/usage` can break it | Reads structured JSON |
 | Dependencies | `rich` | `rich`, `numpy`, `pydantic`, `pytz`, `pyyaml`, ... |
-| Platforms | macOS, Linux; Windows with `--once` / `--json` only | macOS, Linux |
+| Platforms | macOS, Linux, Windows (no Tab key) | macOS, Linux |
 
 Use Claude Monitor if you want token-level analytics and forecasting. Use this
 if you just want the numbers from *Settings > Usage* in a terminal pane with no

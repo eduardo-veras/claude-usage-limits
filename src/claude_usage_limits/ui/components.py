@@ -59,21 +59,21 @@ def build_limits_panel(data):
     )
 
 
-def render_toggle_hint(active):
+def render_toggle_hint(active, interactive=False):
     hint = Text()
     for key, label in (("24h", "Last 24h"), ("7d", "Last 7d")):
         style = "tab.bold" if key == active else "muted"
         hint.append(f" {label} ", style=style)
         hint.append(" ")
-    hint.append("(press Tab to switch)", style="muted.italic")
+    hint.append("(press Tab to switch)" if interactive else "(choose with --view)", style="muted.italic")
     return hint
 
 
-def build_contrib_panel(data, active):
+def build_contrib_panel(data, active, interactive=False):
     contrib = data.get("contrib") or {}
     block = contrib.get(active)
 
-    body = [render_toggle_hint(active), Text("")]
+    body = [render_toggle_hint(active, interactive), Text("")]
 
     if not block:
         if any(contrib.values()):

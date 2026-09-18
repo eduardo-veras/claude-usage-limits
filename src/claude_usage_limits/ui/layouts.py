@@ -10,7 +10,7 @@ from claude_usage_limits.terminal.themes import glyphs
 from claude_usage_limits.ui.components import build_contrib_panel, build_limits_panel
 
 
-def build_dashboard(data, error, countdown=None, view="24h", fetched_at=None):
+def build_dashboard(data, error, countdown=None, view="7d", fetched_at=None, interactive=False):
     lines = []
 
     title = Text(justify="center")
@@ -25,7 +25,7 @@ def build_dashboard(data, error, countdown=None, view="24h", fetched_at=None):
         return Group(*lines)
 
     lines.append(build_limits_panel(data))
-    lines.append(build_contrib_panel(data, view))
+    lines.append(build_contrib_panel(data, view, interactive))
 
     stamp = (fetched_at or datetime.now()).strftime("%H:%M:%S")
     footer = Text(f"Last updated {stamp}", style="muted")

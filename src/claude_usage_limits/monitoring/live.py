@@ -1,4 +1,4 @@
-"""The live refresh loop (Tab to switch view, Ctrl+C to exit)."""
+"""The live refresh loop (Ctrl+C to exit; Tab switches view where the terminal allows it)."""
 
 import os
 import select
@@ -21,13 +21,13 @@ except ImportError:  # not a POSIX terminal (e.g. Windows)
     tty = None
 
 
-
-def run_loop(interval, console):
-    state = {"data": {}, "error": None, "view": "24h", "last_fetch": 0.0, "fetched_at": None}
+def run_loop(interval, console, view="7d"):
+    state = {"data": {}, "error": None, "view": view, "last_fetch": 0.0, "fetched_at": None}
+    interactive = sys.stdin.isatty() and termios is not None
 
     def render():
         countdown = max(0, round(interval - (time.monotonic() - state["last_fetch"])))
-        return build_dashboard(state["data"], state["error"], countdown, state["view"], state["fetched_at"])
+        return build_dashboard(state["data"], state["error"], countdown, state["view"], state["fetched_at"], interactive)
 
     def refetch():
         text, error = fetch_usage_text()
@@ -36,7 +36,20 @@ def run_loop(interval, console):
         state["last_fetch"] = time.monotonic()
         state["fetched_at"] = datetime.now()
 
-    interactive = sys.stdin.isatty() and termios is not None
+    if termios is None:
+        # Windows: no termios, and select() only takes sockets there, so no Tab
+        # key. Same approach as Claude Monitor: sleep, redraw, Ctrl+C to exit.
+        try:
+            with Live(console=console, screen=True, auto_refresh=False) as live:
+                while True:
+                    if state["fetched_at"] is None or time.monotonic() - state["last_fetch"] >= interval:
+                        refetch()
+                    live.update(render(), refresh=True)
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            pass
+        return
+
     old_settings = None
     if interactive:
         fd = sys.stdin.fileno()

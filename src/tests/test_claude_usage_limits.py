@@ -5,6 +5,7 @@ import pytest
 from rich.console import Console
 
 from claude_usage_limits.core import fetcher, parser
+from claude_usage_limits.monitoring import live
 from claude_usage_limits.terminal import themes
 from claude_usage_limits.ui import components, layouts, progress_bars
 from claude_usage_limits.utils import time_utils
@@ -129,7 +130,7 @@ def test_bold_variants_are_actually_styled():
     out = console.export_text(styles=True)
     assert "\x1b[1;36mCLAUDE ACCOUNT USAGE MONITOR" in out  # bold cyan title
     assert "\x1b[1;31m 81%" in out  # bold red percentage
-    assert "\x1b[1;7m Last 24h " in out  # bold reverse active tab
+    assert "\x1b[1;7m Last 7d " in out  # bold reverse active tab (7d is the default view)
 
 
 def test_fetch_resolves_path_and_decodes_utf8(monkeypatch):
@@ -150,3 +151,24 @@ def test_fetch_reports_missing_cli(monkeypatch):
     monkeypatch.setattr(fetcher.shutil, "which", lambda name: None)
     text, error = fetcher.fetch_usage_text()
     assert text is None and "not found" in error
+
+
+def test_live_loop_without_termios(monkeypatch):
+    # The Windows path: no Tab key, just sleep / redraw until Ctrl+C.
+    sleeps = []
+
+    def fake_sleep(seconds):
+        sleeps.append(seconds)
+        if len(sleeps) == 3:
+            raise KeyboardInterrupt
+
+    fetches = []
+    monkeypatch.setattr(live, "termios", None)
+    monkeypatch.setattr(live.time, "sleep", fake_sleep)
+    monkeypatch.setattr(live, "fetch_usage_text", lambda: (fetches.append(1), (SAMPLE, None))[1])
+    console = Console(theme=themes.build_theme("classic"), width=100, record=True, force_terminal=True)
+    live.run_loop(60, console, view="24h")  # must return cleanly on Ctrl+C
+
+    out = console.export_text()
+    assert len(fetches) == 1  # three redraws, one fetch
+    assert "120 requests" in out and "choose with --view" in out and "press Tab" not in out

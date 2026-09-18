@@ -21,7 +21,7 @@ from claude_usage_limits.terminal.themes import (
 from claude_usage_limits.ui.layouts import build_dashboard
 
 
-def run_once(as_json, console):
+def run_once(as_json, console, view):
     text, error = fetch_usage_text()
     if error:
         console.print(f"[crit.bold]error:[/crit.bold] {error}")
@@ -30,7 +30,7 @@ def run_once(as_json, console):
     if as_json:
         print(json.dumps(data, indent=2))
     else:
-        console.print(build_dashboard(data, None, fetched_at=datetime.now()))
+        console.print(build_dashboard(data, None, view=view, fetched_at=datetime.now()))
 
 
 
@@ -39,6 +39,12 @@ def main():
     parser.add_argument("--once", action="store_true", help="Print once and exit (no loop).")
     parser.add_argument("--json", action="store_true", help="Print parsed data as JSON instead of a dashboard.")
     parser.add_argument("--interval", type=int, default=60, help="Refresh interval in seconds (default: 60).")
+    parser.add_argument(
+        "--view",
+        choices=["24h", "7d"],
+        default="7d",
+        help="Window shown in the What's Contributing panel (default: 7d). Tab switches it live on macOS/Linux.",
+    )
     parser.add_argument(
         "--theme",
         choices=["auto", *THEMES],
@@ -54,12 +60,7 @@ def main():
     console = Console(theme=build_theme(theme))
 
     if args.once or args.json:
-        run_once(args.json, console)
+        run_once(args.json, console, args.view)
         return
 
-    if sys.platform == "win32":
-        # ponytail: the live loop needs termios/select; add an msvcrt key-polling path to lift this.
-        console.print("[crit.bold]error:[/crit.bold] the live dashboard is not supported on Windows yet; use --once or --json.")
-        sys.exit(2)
-
-    run_loop(args.interval, console)
+    run_loop(args.interval, console, args.view)
