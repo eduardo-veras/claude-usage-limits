@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-usage-limits"
+dynamic = ["version"]
+description = "Terminal dashboard for your Claude account-wide usage limits (session / weekly), via the Claude Code /usage command"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "eduardo-veras" }]
+keywords = ["claude", "claude-code", "usage", "limits", "monitoring", "terminal", "rich"]
+classifiers = [
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: MacOS",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Topic :: System :: Monitoring",
+]
+dependencies = [
+  "rich>=13.7.0",
+  "tzdata; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0.0"]
+
+[project.urls]
+homepage = "https://github.com/eduardo-veras/claude-usage-limits"
+issues = "https://github.com/eduardo-veras/claude-usage-limits/issues"
+
+[project.scripts]
+claude-usage-limits = "claude_usage_limits.cli.main:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "claude_usage_limits.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["claude_usage_limits*"]
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
