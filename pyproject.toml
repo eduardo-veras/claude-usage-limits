@@ -22,7 +22,7 @@ classifiers = [
   "Topic :: System :: Monitoring",
 ]
 dependencies = [
-  "rich>=13.7.0",
+  "rich>=15.0.0",
   "tzdata; sys_platform == 'win32'",
 ]
 
